@@ -1,9 +1,102 @@
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { Radio, Tv } from "lucide-react";
 import { assets } from "@/lib/assets";
+import Equalizer from "@/components/Equalizer";
+import { useEffect, useRef, useState } from "react";
+import HLS from "hls.js";
 
 const LiveTVSection = () => {
   const { ref, isVisible } = useScrollReveal();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsRef = useRef<HLS | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!videoRef.current || !isVisible) return;
+
+    const streamUrl = "https://media.hydeinnovations.com/FACE-TV-HEVC/index.m3u8";
+
+    const initStream = async () => {
+      try {
+        // Ensure video is not muted and volume is full
+        if (videoRef.current) {
+          videoRef.current.muted = false;
+          videoRef.current.volume = 1;
+        }
+
+        // Check if HLS is supported natively (Safari/iOS)
+        if (videoRef.current!.canPlayType("application/vnd.apple.mpegurl")) {
+          console.log("Using native HLS support");
+          videoRef.current!.src = streamUrl;
+          videoRef.current!.load();
+          await videoRef.current!.play();
+          setError(null);
+        } else if (HLS.isSupported()) {
+          // Use HLS.js for other browsers
+          console.log("Using HLS.js for streaming");
+          
+          if (hlsRef.current) {
+            hlsRef.current.destroy();
+          }
+
+          hlsRef.current = new HLS({
+            autoStartLoad: true,
+            startPosition: -1,
+            debug: false,
+            enableWorker: true,
+            lowLatencyMode: true,
+            backBufferLength: 90,
+          });
+
+          hlsRef.current.loadSource(streamUrl);
+          hlsRef.current.attachMedia(videoRef.current);
+
+          hlsRef.current.on(HLS.Events.MANIFEST_PARSED, async () => {
+            console.log("HLS manifest parsed, starting playback");
+            try {
+              videoRef.current!.muted = false;
+              videoRef.current!.volume = 1;
+              await videoRef.current?.play();
+              setError(null);
+            } catch (err) {
+              console.error("Playback error:", err);
+            }
+          });
+
+          hlsRef.current.on(HLS.Events.ERROR, (event, data) => {
+            console.error("HLS error:", data);
+            if (data.fatal) {
+              setError(`Streaming error: ${data.type}`);
+              switch (data.type) {
+                case HLS.ErrorTypes.NETWORK_ERROR:
+                  console.error("Network error loading HLS:", data);
+                  break;
+                case HLS.ErrorTypes.MEDIA_ERROR:
+                  console.error("Media error:", data);
+                  hlsRef.current?.recoverMediaError();
+                  break;
+              }
+            }
+          });
+        } else {
+          setError("HLS streaming not supported on this browser");
+          console.warn("HLS streaming not supported on this browser");
+        }
+      } catch (err) {
+        console.error("Stream initialization error:", err);
+        setError("Failed to load stream");
+      }
+    };
+
+    initStream();
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [isVisible]);
 
   return (
     <section ref={ref} className="py-20 bg-background">
@@ -15,7 +108,7 @@ const LiveTVSection = () => {
           </h2>
         </div>
         <p className="text-muted-foreground text-center mb-10 max-w-lg mx-auto">
-          Tune in to Face TV — StarTimes CH 223 / ST 199. 24 hours of non-stop Ugandan music.
+          Tune in to Face TV — StarTimes CH 223 DTT/Satellite Dish CH 528- 24 hours of non-stop Ugandan music.
         </p>
 
         <div
@@ -24,20 +117,23 @@ const LiveTVSection = () => {
           }`}
         >
           <div className="relative rounded-xl overflow-hidden glass-card">
-            {/* Simulated Live Player */}
+            {/* Live Stream Player */}
             <div className="aspect-video relative">
               <video
+                ref={videoRef}
                 autoPlay
-                muted
-                loop
                 playsInline
-                className="w-full h-full object-cover"
-              >
-                <source src={assets.faceHome} type="video/mp4" />
-              </video>
-              <div className="absolute top-4 left-4 flex items-center gap-2 bg-primary/90 px-3 py-1 rounded-full">
-                <span className="w-2 h-2 bg-primary-foreground rounded-full animate-pulse" />
-                <span className="text-xs font-semibold text-primary-foreground uppercase tracking-wider">Live</span>
+                controls
+                className="w-full h-full object-cover bg-black"
+              />
+              {error && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+                  <p className="text-red-500 text-center px-4">{error}</p>
+                </div>
+              )}
+              <div className="absolute top-4 left-4 flex items-center gap-3 bg-primary/90 px-4 py-1.5 rounded-full shadow-lg">
+                <Equalizer />
+                <span className="text-sm font-bold text-primary-foreground uppercase tracking-widest drop-shadow-md">live</span>
               </div>
               <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-background/90 to-transparent p-6">
                 <div className="flex items-center gap-3">

@@ -1,12 +1,9 @@
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 const clients = [
-  { name: "Coca-Cola", logo: "/images/client-cocacola.png" },
-  { name: "Buzz", logo: "/images/client-buzz.jpg" },
-  { name: "JESA", logo: "/images/client-jesa.jpg" },
   { name: "Sprite", logo: "/images/client-sprite.jpg" },
-  { name: "StarTimes", logo: "/images/client-startimes.jpg" },
-  { name: "Fanta", logo: "/images/client-fanta.jpg" },
+  { name: "Startimes", logo: "/images/star.png" },
+  { name: "Tooro", logo: "/images/tooro.png" },
 ];
 
 const ClientsSection = () => {

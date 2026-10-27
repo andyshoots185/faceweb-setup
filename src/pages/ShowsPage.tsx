@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { assets } from "@/lib/assets";
-import { Play, Pause, Filter } from "lucide-react";
-import { useScrollReveal } from "@/hooks/useScrollReveal";
+import { Play, Filter } from "lucide-react";
+import AnimatedSection from "@/components/AnimatedSection";
 import SEO from "@/components/SEO";
 
 type Category = "All" | "Music" | "Entertainment" | "Lifestyle" | "Party";
@@ -31,14 +31,14 @@ const shows: Show[] = [
     time: "Mon–Fri, 6–7PM",
   },
   {
-    title: "Backyard",
+    title: "Rise Up",
     description: "Intimate celebrity conversations and lifestyle stories. Get up close and personal with Uganda's biggest stars in relaxed settings.",
     video: assets.riseUp,
     category: "Lifestyle",
     time: "Fri & Sun, Select Times",
   },
   {
-    title: "Club Bangerz",
+    title: "102 Collaborations",
     description: "Weekend party anthems and DJ sets all Saturday long. The ultimate soundtrack for your weekend vibes.",
     video: assets.collabs,
     category: "Party",
@@ -59,7 +59,7 @@ const shows: Show[] = [
     time: "Thursday, 12–6PM & 8PM–10AM",
   },
   {
-    title: "Freshers",
+    title: "Imba Sessions",
     description: "Discover new and upcoming Ugandan artists. First look at fresh talent breaking into the music scene.",
     video: assets.show,
     category: "Entertainment",
@@ -80,7 +80,6 @@ const ShowsPage = () => {
   const [activeCategory, setActiveCategory] = useState<Category>("All");
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
-  const { ref: gridRef, isVisible: gridVisible } = useScrollReveal();
 
   const filtered = activeCategory === "All" ? shows : shows.filter((s) => s.category === activeCategory);
 
@@ -134,7 +133,7 @@ const ShowsPage = () => {
       </section>
 
       {/* Category Filter */}
-      <section className="py-8 bg-background border-b border-border/50">
+      <AnimatedSection className="py-8 bg-background border-b border-border/50">
         <div className="section-container">
           <div className="flex items-center gap-3 flex-wrap justify-center">
             <Filter size={18} className="text-primary" />
@@ -142,10 +141,10 @@ const ShowsPage = () => {
               <button
                 key={cat}
                 onClick={() => { setActiveCategory(cat); setActiveIndex(null); }}
-                className={`px-5 py-2 rounded-full text-sm font-semibold uppercase tracking-wider transition-all duration-300 ${
+                className={`px-5 py-2 rounded-full text-sm font-semibold uppercase tracking-wider transition-all duration-300 hover:scale-105 ${
                   activeCategory === cat
-                    ? "text-primary-foreground shadow-lg"
-                    : "glass-card text-foreground hover:border-primary/50"
+                    ? "text-primary-foreground shadow-[0_0_15px_rgba(255,0,0,0.5)] scale-105"
+                    : "glass-card text-foreground hover:border-primary"
                 }`}
                 style={activeCategory === cat ? { background: "var(--gradient-primary)" } : undefined}
               >
@@ -154,19 +153,16 @@ const ShowsPage = () => {
             ))}
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* Shows Grid */}
-      <section ref={gridRef} className="py-16 bg-background">
+      <AnimatedSection className="py-16 bg-background">
         <div className="section-container">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {filtered.map((show, index) => (
               <div
                 key={show.title}
-                className={`glass-card overflow-hidden group transition-all duration-700 hover:border-primary/50 ${
-                  gridVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                }`}
-                style={{ transitionDelay: `${index * 100}ms` }}
+                className="glass-card overflow-hidden group transition-all duration-500 hover:border-primary hover:shadow-[0_0_30px_rgba(255,0,0,0.2)]"
               >
                 {/* Video thumbnail */}
                 <div
@@ -194,6 +190,7 @@ const ShowsPage = () => {
                     </div>
                   )}
                   {/* Category badge */}
+
                   <div className="absolute top-3 left-3">
                     <span
                       className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-primary-foreground"
@@ -224,11 +221,13 @@ const ShowsPage = () => {
             ))}
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* EPG Banner */}
       <section className="py-16 flex justify-center" style={{ background: "var(--gradient-dark)" }}>
-        <img src={assets.epg} alt="EPG" className="h-32 md:h-44 object-contain" />
+        <AnimatedSection>
+          <img src={assets.epg} alt="EPG" className="h-32 md:h-44 object-contain" />
+        </AnimatedSection>
       </section>
     </div>
   );
